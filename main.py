@@ -13,37 +13,39 @@ import urllib.parse
 import config
 
 
-connection = AuthorizedConnection(
-    "http://{User}:{Passwd}@{Router}/".format(User=config.username, Passwd=config.password, Router=config.router))
 
-# This just simplifies access to separate API groups, you can use device = Device(connection) if you want
-client = Client(connection)
+if __name__ == "__main__":
+    connection = AuthorizedConnection(
+        "http://{User}:{Passwd}@{Router}/".format(User=config.username, Passwd=config.password, Router=config.router))
 
-# print(client.device.signal())  # Can be accessed without authorization
-# print(client.device.information())  # Needs valid authorization, will throw exception if invalid credentials are passed in URL
-sms = client.sms.get_sms_list(1, BoxTypeEnum.LOCAL_INBOX, 1, 0, 0, 1)
-# print(sms)
+    # This just simplifies access to separate API groups, you can use device = Device(connection) if you want
+    client = Client(connection)
 
-# Skip this loop if no messages
-if sms['Messages'] == None:
-    # Logout
-    client.user.logout()
-elif int(sms['Messages']['Message']['Smstat']) == 1:
-    client.user.logout()
-else:
+    # print(client.device.signal())  # Can be accessed without authorization
+    # print(client.device.information())  # Needs valid authorization, will throw exception if invalid credentials are passed in URL
+    sms = client.sms.get_sms_list(1, BoxTypeEnum.LOCAL_INBOX, 1, 0, 0, 1)
+    # print(sms)
 
-    # Skip this loop if the SMS was read
+    # Skip this loop if no messages
+    if sms['Messages'] == None:
+        # Logout
+        client.user.logout()
+    elif int(sms['Messages']['Message']['Smstat']) == 1:
+        client.user.logout()
+    else:
 
-    body = ('Message date: {Date}\nMessage from: {From}\nMessage content：\n\n{Content}').format(
-        Date=sms['Messages']['Message']['Date'], From=sms['Messages']['Message']['Phone'], Content=sms['Messages']['Message']['Content'])
+        # Skip this loop if the SMS was read
 
-    text = urllib.parse.quote_plus(body)
-    url = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % (
-        config.telegramBotToken, config.telegramDestID, text)
+        body = ('Message date: {Date}\nMessage from: {From}\nMessage content：\n\n{Content}').format(
+            Date=sms['Messages']['Message']['Date'], From=sms['Messages']['Message']['Phone'], Content=sms['Messages']['Message']['Content'])
 
-    httpReq = urllib.request.urlopen(url)
-    httpReq.close()
+        text = urllib.parse.quote_plus(body)
+        url = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % (
+            config.telegramBotToken, config.telegramDestID, text)
 
-    client.sms.set_read(int(sms['Messages']['Message']['Index']))
+        httpReq = urllib.request.urlopen(url)
+        httpReq.close()
 
-    client.user.logout()
+        client.sms.set_read(int(sms['Messages']['Message']['Index']))
+
+        client.user.logout()
