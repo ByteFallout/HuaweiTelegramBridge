@@ -13,8 +13,8 @@ import urllib.parse
 import config
 
 
-
 if __name__ == "__main__":
+
     connection = AuthorizedConnection(
         "http://{User}:{Passwd}@{Router}/".format(User=config.username, Passwd=config.password, Router=config.router))
 
